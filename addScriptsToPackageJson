@@ -1,0 +1,38 @@
+#! /usr/bin/node
+
+// argv is stdin input
+// [0]node [1]addScriptsToPackageJson [2...]realArg ...
+
+var pathToPkg = process.argv[2];
+var cmdName = process.argv[3];
+var cmdContent = process.argv[4];
+
+console.log(`target package.json is at: ${ pathToPkg }`);
+console.log(`script command name is: ${ cmdName }`);
+console.log(`script corresponding command is: ${ cmdContent }`);
+
+var path = require('path');
+var fs = require('fs');
+
+fs.readFile(  pathToPkg, (err, pkg) => {
+    var pkgObj;
+    if( err ) {
+	if( err.code === 'ENOENT' ) {
+	    console.log('file not found so create empty package.json');
+	    pkgObj = { scripts: {}};
+	} else {
+	    throw err;
+	}
+    } else {
+	pkgObj = JSON.parse(pkg);
+    }
+    console.log('currently package.json is');
+    console.log(pkgObj.scripts);
+    console.log( `adding ${cmdName}: ${cmdContent}`);
+    pkgObj.scripts[cmdName] = cmdContent;
+    var prettyJsonStr = JSON.stringify( pkgObj, null, 4 );
+    fs.writeFile( pathToPkg, prettyJsonStr, err => {
+	if(err) throw err;
+	console.log(`finish adding script ${cmdName}`);
+    });
+});
